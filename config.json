@@ -1,0 +1,46 @@
+{
+  "run": {
+    "num_prompts": 8,
+    "trajectories_per_prompt": 4,
+    "output_dir": "./output",
+    "run_name": null
+  },
+  "prompt_generator": {
+    "model": "Qwen/Qwen2.5-3B-Instruct",
+    "system_prompt": "You are a prompt engineer. Produce diverse, high-quality prompts.",
+    "user_initial_prompt": "Create coding interview tasks about Python concurrency.",
+    "sampling": {
+      "temperature": 0.8,
+      "top_p": 0.95,
+      "max_tokens": 180
+    },
+    "batch_size": 32,
+    "vllm": {
+      "tensor_parallel_size": 1,
+      "gpu_memory_utilization": 0.92,
+      "max_num_batched_tokens": 8192,
+      "max_num_seqs": 128,
+      "dtype": "auto",
+      "trust_remote_code": false
+    }
+  },
+  "trajectory_generator": {
+    "model": "Qwen/Qwen2.5-3B-Instruct",
+    "system_prompt": "You are a helpful assistant. Answer the prompt clearly and thoroughly.",
+    "trajectory_prefix": "",
+    "sampling": {
+      "temperature": 0.7,
+      "top_p": 0.95,
+      "max_tokens": 512
+    },
+    "batch_size": 64,
+    "vllm": {
+      "tensor_parallel_size": 1,
+      "gpu_memory_utilization": 0.92,
+      "max_num_batched_tokens": 16384,
+      "max_num_seqs": 256,
+      "dtype": "auto",
+      "trust_remote_code": false
+    }
+  }
+}

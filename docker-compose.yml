@@ -1,0 +1,14 @@
+services:
+  traj-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: traj-generator:latest
+    gpus: all
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - ./output:/app/output
+      - ./hf-cache:/root/.cache/huggingface
+    environment:
+      - HF_HOME=/root/.cache/huggingface
+    command: ["uv", "run", "traj-generate", "--config", "/app/config.json"]
