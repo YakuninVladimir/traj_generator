@@ -20,6 +20,7 @@ class VLLMConfig:
     max_num_batched_tokens: int | None = None
     max_num_seqs: int | None = None
     max_model_len: int | None = None
+    enforce_eager: bool = False
     dtype: str = "auto"
     trust_remote_code: bool = False
 
@@ -90,6 +91,7 @@ def _vllm_from(data: dict[str, Any] | None) -> VLLMConfig:
         max_model_len=(
             int(data["max_model_len"]) if data.get("max_model_len") is not None else None
         ),
+        enforce_eager=bool(data.get("enforce_eager", False)),
         dtype=str(data.get("dtype", "auto")),
         trust_remote_code=bool(data.get("trust_remote_code", False)),
     )

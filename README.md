@@ -14,6 +14,8 @@ Everything is configured in `config.json`:
 - `prompt_generator.user_initial_prompt` (your initial instruction for the first model)
 - model names, sampling settings, vLLM engine settings, and batch sizes
 - output directory (`run.output_dir`)
+- vLLM memory controls: `max_model_len`, `max_num_seqs`, `gpu_memory_utilization`
+- optional eager mode: `enforce_eager` (set `true` to avoid CUDA graph capture)
 
 ## Output format
 
@@ -65,6 +67,16 @@ To maximize throughput:
 - Tune vLLM settings:
   - `max_num_batched_tokens`
   - `max_num_seqs`
+  - `max_model_len`
   - `gpu_memory_utilization`
+  - `enforce_eager` (`false` is usually faster; `true` is safer for tight VRAM)
   - `tensor_parallel_size` (for multi-GPU)
 - Use a model size that fits your hardware.
+
+## Memory behavior
+
+The pipeline loads models sequentially:
+1. prompt generator model runs and is released,
+2. trajectory model starts only after GPU memory cleanup.
+
+This avoids keeping two vLLM engines in VRAM at the same time on single-GPU servers.

@@ -17,9 +17,11 @@
     "batch_size": 32,
     "vllm": {
       "tensor_parallel_size": 1,
-      "gpu_memory_utilization": 0.92,
-      "max_num_batched_tokens": 8192,
-      "max_num_seqs": 128,
+      "gpu_memory_utilization": 0.7,
+      "max_num_batched_tokens": 4096,
+      "max_num_seqs": 64,
+      "max_model_len": 8192,
+      "enforce_eager": true,
       "dtype": "auto",
       "trust_remote_code": false
     }
@@ -36,9 +38,11 @@
     "batch_size": 64,
     "vllm": {
       "tensor_parallel_size": 1,
-      "gpu_memory_utilization": 0.92,
-      "max_num_batched_tokens": 16384,
-      "max_num_seqs": 256,
+      "gpu_memory_utilization": 0.6,
+      "max_num_batched_tokens": 4096,
+      "max_num_seqs": 48,
+      "max_model_len": 4096,
+      "enforce_eager": true,
       "dtype": "auto",
       "trust_remote_code": false
     }

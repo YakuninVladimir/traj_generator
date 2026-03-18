@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 import json
 import zipfile
 from dataclasses import asdict, dataclass
@@ -44,6 +45,7 @@ def _build_llm(model_name: str, cfg: VLLMConfig) -> LLM:
         "model": model_name,
         "tensor_parallel_size": cfg.tensor_parallel_size,
         "gpu_memory_utilization": cfg.gpu_memory_utilization,
+        "enforce_eager": cfg.enforce_eager,
         "dtype": cfg.dtype,
         "trust_remote_code": cfg.trust_remote_code,
     }
@@ -54,6 +56,20 @@ def _build_llm(model_name: str, cfg: VLLMConfig) -> LLM:
     if cfg.max_model_len is not None:
         kwargs["max_model_len"] = cfg.max_model_len
     return LLM(**kwargs)
+
+
+def _release_gpu_memory(llm: LLM | None) -> None:
+    if llm is not None:
+        del llm
+    gc.collect()
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()
+    except Exception:
+        pass
 
 
 def _extract_text(outputs) -> str:
@@ -108,9 +124,6 @@ def run_pipeline(config: AppConfig) -> dict[str, str]:
     base_output_dir = Path(config.run.output_dir).resolve()
     run_dir, archive_dir = _prepare_output_dirs(base_output_dir, run_name)
 
-    prompt_llm = _build_llm(config.prompt_generator.model, config.prompt_generator.vllm)
-    traj_llm = _build_llm(config.trajectory_generator.model, config.trajectory_generator.vllm)
-
     prompt_inputs = [
         _build_prompt_generator_input(
             config.prompt_generator.system_prompt,
@@ -121,11 +134,18 @@ def run_pipeline(config: AppConfig) -> dict[str, str]:
     ]
     prompt_sampling = _sampling_params(config.prompt_generator.sampling)
     prompts: list[GeneratedPrompt] = []
-    for chunk in _chunked(prompt_inputs, config.prompt_generator.batch_size):
-        outputs = prompt_llm.generate(chunk, prompt_sampling, use_tqdm=False)
-        prompts.extend(
-            GeneratedPrompt(prompt_id=len(prompts), text=_extract_text(out)) for out in outputs
-        )
+    prompt_llm: LLM | None = None
+    try:
+        prompt_llm = _build_llm(config.prompt_generator.model, config.prompt_generator.vllm)
+        for chunk in _chunked(prompt_inputs, config.prompt_generator.batch_size):
+            outputs = prompt_llm.generate(chunk, prompt_sampling, use_tqdm=False)
+            base_prompt_id = len(prompts)
+            prompts.extend(
+                GeneratedPrompt(prompt_id=base_prompt_id + idx, text=_extract_text(out))
+                for idx, out in enumerate(outputs)
+            )
+    finally:
+        _release_gpu_memory(prompt_llm)
 
     trajectory_inputs: list[str] = []
     trajectory_index: list[tuple[int, int]] = []
@@ -143,20 +163,27 @@ def run_pipeline(config: AppConfig) -> dict[str, str]:
     trajectory_sampling = _sampling_params(config.trajectory_generator.sampling)
     trajectories: list[GeneratedTrajectory] = []
     processed = 0
-    for chunk in _chunked(trajectory_inputs, config.trajectory_generator.batch_size):
-        outputs = traj_llm.generate(chunk, trajectory_sampling, use_tqdm=False)
-        for local_idx, output in enumerate(outputs):
-            prompt_id, traj_id = trajectory_index[processed + local_idx]
-            prompt_text = prompts[prompt_id].text
-            trajectories.append(
-                GeneratedTrajectory(
-                    prompt_id=prompt_id,
-                    trajectory_id=traj_id,
-                    prompt_text=prompt_text,
-                    trajectory_text=_extract_text(output),
+    traj_llm: LLM | None = None
+    try:
+        traj_llm = _build_llm(
+            config.trajectory_generator.model, config.trajectory_generator.vllm
+        )
+        for chunk in _chunked(trajectory_inputs, config.trajectory_generator.batch_size):
+            outputs = traj_llm.generate(chunk, trajectory_sampling, use_tqdm=False)
+            for local_idx, output in enumerate(outputs):
+                prompt_id, traj_id = trajectory_index[processed + local_idx]
+                prompt_text = prompts[prompt_id].text
+                trajectories.append(
+                    GeneratedTrajectory(
+                        prompt_id=prompt_id,
+                        trajectory_id=traj_id,
+                        prompt_text=prompt_text,
+                        trajectory_text=_extract_text(output),
+                    )
                 )
-            )
-        processed += len(chunk)
+            processed += len(chunk)
+    finally:
+        _release_gpu_memory(traj_llm)
 
     prompts_path = run_dir / "generated_prompts.jsonl"
     trajectories_path = run_dir / "generated_trajectories.jsonl"
