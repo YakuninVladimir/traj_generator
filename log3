@@ -1,0 +1,153 @@
+traj-generator-1  | 
+traj-generator-1  | ==========
+traj-generator-1  | == CUDA ==
+traj-generator-1  | ==========
+traj-generator-1  | 
+traj-generator-1  | CUDA Version 12.4.1
+traj-generator-1  | 
+traj-generator-1  | Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+traj-generator-1  | 
+traj-generator-1  | This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+traj-generator-1  | By pulling and using the container, you accept the terms and conditions of this license:
+traj-generator-1  | https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+traj-generator-1  | 
+traj-generator-1  | A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+traj-generator-1  | 
+traj-generator-1  |    Building traj-generator @ file:///app
+traj-generator-1  |       Built traj-generator @ file:///app
+traj-generator-1  | Installed 1 package in 1ms
+traj-generator-1  | INFO 03-18 13:45:19 [utils.py:238] non-default args: {'max_model_len': 8192, 'gpu_memory_utilization': 0.7, 'max_num_batched_tokens': 4096, 'max_num_seqs': 64, 'disable_log_stats': True, 'enforce_eager': True, 'model': 'Qwen/Qwen2.5-3B-Instruct'}
+traj-generator-1  | INFO 03-18 13:45:36 [model.py:531] Resolved architecture: Qwen2ForCausalLM
+traj-generator-1  | WARNING 03-18 13:45:36 [model.py:1839] Your device 'Tesla V100-PCIE-16GB' (with compute capability 7.0) doesn't support torch.bfloat16. Falling back to torch.float16 for compatibility.
+traj-generator-1  | WARNING 03-18 13:45:36 [model.py:1892] Casting torch.bfloat16 to torch.float16.
+traj-generator-1  | INFO 03-18 13:45:36 [model.py:1554] Using max model len 8192
+traj-generator-1  | INFO 03-18 13:45:36 [scheduler.py:231] Chunked prefill is enabled with max_num_batched_tokens=4096.
+traj-generator-1  | INFO 03-18 13:45:36 [vllm.py:747] Asynchronous scheduling is enabled.
+traj-generator-1  | WARNING 03-18 13:45:36 [vllm.py:781] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+traj-generator-1  | WARNING 03-18 13:45:36 [vllm.py:792] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+traj-generator-1  | INFO 03-18 13:45:36 [vllm.py:957] Cudagraph is disabled under eager mode
+traj-generator-1  | (EngineCore_DP0 pid=255) INFO 03-18 13:45:38 [core.py:101] Initializing a V1 LLM engine (v0.17.1) with config: model='Qwen/Qwen2.5-3B-Instruct', speculative_config=None, tokenizer='Qwen/Qwen2.5-3B-Instruct', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.float16, max_seq_len=8192, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=True, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False), seed=0, served_model_name=Qwen/Qwen2.5-3B-Instruct, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'level': None, 'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['all'], 'splitting_ops': [], 'compile_mm_encoder': False, 'compile_sizes': [], 'compile_ranges_split_points': [4096], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': True, 'static_all_moe_layers': []}
+traj-generator-1  | (EngineCore_DP0 pid=255) INFO 03-18 13:45:38 [parallel_state.py:1393] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://172.17.1.2:40483 backend=nccl
+traj-generator-1  | [W318 13:45:38.210877115 socket.cpp:764] [c10d] The client socket cannot be initialized to connect to [traj_generator-traj-generator-1.traj_generator_default]:40483 (errno: 97 - Address family not supported by protocol).
+traj-generator-1  | (EngineCore_DP0 pid=255) INFO 03-18 13:45:38 [parallel_state.py:1715] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+traj-generator-1  | (EngineCore_DP0 pid=255) INFO 03-18 13:45:39 [base.py:106] Offloader set to NoopOffloader
+traj-generator-1  | (EngineCore_DP0 pid=255) INFO 03-18 13:45:39 [gpu_model_runner.py:4281] Starting to load model Qwen/Qwen2.5-3B-Instruct...
+traj-generator-1  | (EngineCore_DP0 pid=255) ERROR 03-18 13:45:39 [fa_utils.py:131] Cannot use FA version 2 is not supported due to FA2 is only supported on devices with compute capability >= 8
+traj-generator-1  | (EngineCore_DP0 pid=255) INFO 03-18 13:45:40 [cuda.py:405] Using TRITON_ATTN attention backend out of potential backends: ['TRITON_ATTN', 'FLEX_ATTENTION'].
+traj-generator-1  | (EngineCore_DP0 pid=255) Loading safetensors checkpoint shards:   0% Completed | 0/2 [00:00<?, ?it/s]
+traj-generator-1  | (EngineCore_DP0 pid=255) Loading safetensors checkpoint shards:  50% Completed | 1/2 [00:01<00:01,  1.45s/it]
+traj-generator-1  | (EngineCore_DP0 pid=255) Loading safetensors checkpoint shards: 100% Completed | 2/2 [00:02<00:00,  1.13s/it]
+traj-generator-1  | (EngineCore_DP0 pid=255) Loading safetensors checkpoint shards: 100% Completed | 2/2 [00:02<00:00,  1.18s/it]
+traj-generator-1  | (EngineCore_DP0 pid=255) 
+traj-generator-1  | (EngineCore_DP0 pid=255) INFO 03-18 13:45:44 [default_loader.py:293] Loading weights took 2.42 seconds
+traj-generator-1  | (EngineCore_DP0 pid=255) INFO 03-18 13:45:44 [gpu_model_runner.py:4364] Model loading took 5.79 GiB memory and 4.693034 seconds
+traj-generator-1  | (EngineCore_DP0 pid=255) INFO 03-18 13:45:55 [gpu_worker.py:424] Available KV cache memory: 4.85 GiB
+traj-generator-1  | (EngineCore_DP0 pid=255) INFO 03-18 13:45:55 [kv_cache_utils.py:1314] GPU KV cache size: 141,344 tokens
+traj-generator-1  | (EngineCore_DP0 pid=255) INFO 03-18 13:45:55 [kv_cache_utils.py:1319] Maximum concurrency for 8,192 tokens per request: 17.25x
+traj-generator-1  | (EngineCore_DP0 pid=255) INFO 03-18 13:45:55 [core.py:282] init engine (profile, create kv cache, warmup model) took 11.36 seconds
+traj-generator-1  | (EngineCore_DP0 pid=255) WARNING 03-18 13:45:57 [vllm.py:781] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+traj-generator-1  | (EngineCore_DP0 pid=255) WARNING 03-18 13:45:57 [vllm.py:792] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+traj-generator-1  | (EngineCore_DP0 pid=255) INFO 03-18 13:45:57 [vllm.py:957] Cudagraph is disabled under eager mode
+traj-generator-1  | INFO 03-18 13:45:57 [llm.py:388] Supported tasks: ['generate']
+traj-generator-1  | INFO 03-18 13:46:12 [utils.py:238] non-default args: {'max_model_len': 4096, 'gpu_memory_utilization': 0.6, 'max_num_batched_tokens': 4096, 'max_num_seqs': 48, 'disable_log_stats': True, 'enforce_eager': True, 'model': 'Qwen/Qwen2.5-3B-Instruct'}
+traj-generator-1  | INFO 03-18 13:46:13 [model.py:531] Resolved architecture: Qwen2ForCausalLM
+traj-generator-1  | WARNING 03-18 13:46:13 [model.py:1839] Your device 'Tesla V100-PCIE-16GB' (with compute capability 7.0) doesn't support torch.bfloat16. Falling back to torch.float16 for compatibility.
+traj-generator-1  | WARNING 03-18 13:46:13 [model.py:1892] Casting torch.bfloat16 to torch.float16.
+traj-generator-1  | INFO 03-18 13:46:13 [model.py:1554] Using max model len 4096
+traj-generator-1  | INFO 03-18 13:46:13 [scheduler.py:231] Chunked prefill is enabled with max_num_batched_tokens=4096.
+traj-generator-1  | WARNING 03-18 13:46:13 [vllm.py:781] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+traj-generator-1  | WARNING 03-18 13:46:13 [vllm.py:792] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+traj-generator-1  | INFO 03-18 13:46:13 [vllm.py:957] Cudagraph is disabled under eager mode
+traj-generator-1  | WARNING 03-18 13:46:13 [system_utils.py:152] We must use the `spawn` multiprocessing start method. Overriding VLLM_WORKER_MULTIPROC_METHOD to 'spawn'. See https://docs.vllm.ai/en/latest/usage/troubleshooting.html#python-multiprocessing for more information. Reasons: CUDA is initialized
+traj-generator-1  | (EngineCore_DP0 pid=410) INFO 03-18 13:46:24 [core.py:101] Initializing a V1 LLM engine (v0.17.1) with config: model='Qwen/Qwen2.5-3B-Instruct', speculative_config=None, tokenizer='Qwen/Qwen2.5-3B-Instruct', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.float16, max_seq_len=4096, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=True, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False), seed=0, served_model_name=Qwen/Qwen2.5-3B-Instruct, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'level': None, 'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['all'], 'splitting_ops': [], 'compile_mm_encoder': False, 'compile_sizes': [], 'compile_ranges_split_points': [4096], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': True, 'static_all_moe_layers': []}
+traj-generator-1  | (EngineCore_DP0 pid=410) INFO 03-18 13:46:27 [parallel_state.py:1393] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://172.17.1.2:38975 backend=nccl
+traj-generator-1  | [W318 13:46:27.924275847 socket.cpp:764] [c10d] The client socket cannot be initialized to connect to [traj_generator-traj-generator-1.traj_generator_default]:38975 (errno: 97 - Address family not supported by protocol).
+traj-generator-1  | (EngineCore_DP0 pid=410) INFO 03-18 13:46:27 [parallel_state.py:1715] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100] EngineCore failed to start.
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100] Traceback (most recent call last):
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/engine/core.py", line 1090, in run_engine_core
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]     engine_core = EngineCoreProc(*args, engine_index=dp_rank, **kwargs)
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]   File "/app/.venv/lib/python3.10/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]     return func(*args, **kwargs)
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/engine/core.py", line 834, in __init__
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]     super().__init__(
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/engine/core.py", line 110, in __init__
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]     self.model_executor = executor_class(vllm_config)
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]   File "/app/.venv/lib/python3.10/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]     return func(*args, **kwargs)
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/executor/abstract.py", line 103, in __init__
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]     self._init_executor()
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/executor/uniproc_executor.py", line 48, in _init_executor
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]     self.driver_worker.init_device()
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/worker/worker_base.py", line 326, in init_device
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]     self.worker.init_device()  # type: ignore
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]   File "/app/.venv/lib/python3.10/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]     return func(*args, **kwargs)
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/worker/gpu_worker.py", line 285, in init_device
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]     self.requested_memory = request_memory(init_snapshot, self.cache_config)
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/worker/utils.py", line 413, in request_memory
+traj-generator-1  | (EngineCore_DP0 pid=410) Process EngineCore_DP0:
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100]     raise ValueError(
+traj-generator-1  | (EngineCore_DP0 pid=410) ERROR 03-18 13:46:27 [core.py:1100] ValueError: Free memory on device cuda:0 (3.97/15.77 GiB) on startup is less than desired GPU memory utilization (0.6, 9.46 GiB). Decrease GPU memory utilization or reduce GPU memory used by other processes.
+traj-generator-1  | (EngineCore_DP0 pid=410) Traceback (most recent call last):
+traj-generator-1  | (EngineCore_DP0 pid=410)   File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+traj-generator-1  | (EngineCore_DP0 pid=410)     self.run()
+traj-generator-1  | (EngineCore_DP0 pid=410)   File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+traj-generator-1  | (EngineCore_DP0 pid=410)     self._target(*self._args, **self._kwargs)
+traj-generator-1  | (EngineCore_DP0 pid=410)   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/engine/core.py", line 1104, in run_engine_core
+traj-generator-1  | (EngineCore_DP0 pid=410)     raise e
+traj-generator-1  | (EngineCore_DP0 pid=410)   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/engine/core.py", line 1090, in run_engine_core
+traj-generator-1  | (EngineCore_DP0 pid=410)     engine_core = EngineCoreProc(*args, engine_index=dp_rank, **kwargs)
+traj-generator-1  | (EngineCore_DP0 pid=410)   File "/app/.venv/lib/python3.10/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+traj-generator-1  | (EngineCore_DP0 pid=410)     return func(*args, **kwargs)
+traj-generator-1  | (EngineCore_DP0 pid=410)   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/engine/core.py", line 834, in __init__
+traj-generator-1  | (EngineCore_DP0 pid=410)     super().__init__(
+traj-generator-1  | (EngineCore_DP0 pid=410)   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/engine/core.py", line 110, in __init__
+traj-generator-1  | (EngineCore_DP0 pid=410)     self.model_executor = executor_class(vllm_config)
+traj-generator-1  | (EngineCore_DP0 pid=410)   File "/app/.venv/lib/python3.10/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+traj-generator-1  | (EngineCore_DP0 pid=410)     return func(*args, **kwargs)
+traj-generator-1  | (EngineCore_DP0 pid=410)   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/executor/abstract.py", line 103, in __init__
+traj-generator-1  | (EngineCore_DP0 pid=410)     self._init_executor()
+traj-generator-1  | (EngineCore_DP0 pid=410)   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/executor/uniproc_executor.py", line 48, in _init_executor
+traj-generator-1  | (EngineCore_DP0 pid=410)     self.driver_worker.init_device()
+traj-generator-1  | (EngineCore_DP0 pid=410)   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/worker/worker_base.py", line 326, in init_device
+traj-generator-1  | (EngineCore_DP0 pid=410)     self.worker.init_device()  # type: ignore
+traj-generator-1  | (EngineCore_DP0 pid=410)   File "/app/.venv/lib/python3.10/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+traj-generator-1  | (EngineCore_DP0 pid=410)     return func(*args, **kwargs)
+traj-generator-1  | (EngineCore_DP0 pid=410)   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/worker/gpu_worker.py", line 285, in init_device
+traj-generator-1  | (EngineCore_DP0 pid=410)     self.requested_memory = request_memory(init_snapshot, self.cache_config)
+traj-generator-1  | (EngineCore_DP0 pid=410)   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/worker/utils.py", line 413, in request_memory
+traj-generator-1  | (EngineCore_DP0 pid=410)     raise ValueError(
+traj-generator-1  | (EngineCore_DP0 pid=410) ValueError: Free memory on device cuda:0 (3.97/15.77 GiB) on startup is less than desired GPU memory utilization (0.6, 9.46 GiB). Decrease GPU memory utilization or reduce GPU memory used by other processes.
+traj-generator-1  | [rank0]:[W318 13:46:28.855803319 ProcessGroupNCCL.cpp:1553] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+traj-generator-1  | Traceback (most recent call last):
+traj-generator-1  |   File "/app/.venv/bin/traj-generate", line 10, in <module>
+traj-generator-1  |     sys.exit(main())
+traj-generator-1  |   File "/app/src/traj_generator/main.py", line 23, in main
+traj-generator-1  |     result = run_pipeline(config)
+traj-generator-1  |   File "/app/src/traj_generator/pipeline.py", line 168, in run_pipeline
+traj-generator-1  |     traj_llm = _build_llm(
+traj-generator-1  |   File "/app/src/traj_generator/pipeline.py", line 58, in _build_llm
+traj-generator-1  |     return LLM(**kwargs)
+traj-generator-1  |   File "/app/.venv/lib/python3.10/site-packages/vllm/entrypoints/llm.py", line 379, in __init__
+traj-generator-1  |     self.llm_engine = LLMEngine.from_engine_args(
+traj-generator-1  |   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/engine/llm_engine.py", line 177, in from_engine_args
+traj-generator-1  |     return cls(
+traj-generator-1  |   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/engine/llm_engine.py", line 111, in __init__
+traj-generator-1  |     self.engine_core = EngineCoreClient.make_client(
+traj-generator-1  |   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/engine/core_client.py", line 98, in make_client
+traj-generator-1  |     return SyncMPClient(vllm_config, executor_class, log_stats)
+traj-generator-1  |   File "/app/.venv/lib/python3.10/site-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+traj-generator-1  |     return func(*args, **kwargs)
+traj-generator-1  |   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/engine/core_client.py", line 734, in __init__
+traj-generator-1  |     super().__init__(
+traj-generator-1  |   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/engine/core_client.py", line 569, in __init__
+traj-generator-1  |     with launch_core_engines(
+traj-generator-1  |   File "/usr/lib/python3.10/contextlib.py", line 142, in __exit__
+traj-generator-1  |     next(self.gen)
+traj-generator-1  |   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/engine/utils.py", line 951, in launch_core_engines
+traj-generator-1  |     wait_for_engine_startup(
+traj-generator-1  |   File "/app/.venv/lib/python3.10/site-packages/vllm/v1/engine/utils.py", line 1010, in wait_for_engine_startup
+traj-generator-1  |     raise RuntimeError(
+traj-generator-1  | RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}
+traj-generator-1  | ERROR 03-18 13:46:29 [core_client.py:691] Engine core proc EngineCore_DP0 died unexpectedly, shutting down client.
