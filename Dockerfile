@@ -23,10 +23,15 @@ RUN python3 -m pip install --no-cache-dir --upgrade pip uv
 
 WORKDIR /app
 
+# Copy only dependency metadata first so this layer is cached
+# when application code changes.
 COPY pyproject.toml README.md /app/
+RUN uv sync --no-install-project
+
+# Application code and runtime config go in later layers.
 COPY src /app/src
 COPY config.json /app/config.json
 
-RUN uv sync
+ENV PYTHONPATH=/app/src
 
-CMD ["uv", "run", "traj-generate", "--config", "/app/config.json"]
+CMD ["uv", "run", "--no-sync", "python", "-m", "traj_generator.main", "--config", "/app/config.json"]
