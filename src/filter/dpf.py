@@ -141,6 +141,82 @@ class DeepParticleFilter(nn.Module):
             dtype=dtype,
         )
 
+    def teacher_particle_distribution(
+        self,
+        obs,
+        prev_obs,
+        particles,
+        tau_obs=0.20,
+        tau_delta=0.12,
+        delta_weight=1.0,
+    ):
+        """
+        Observation-only teacher distribution over particles.
+
+        High probability mass goes to particles whose decoded observation:
+          - matches y_t
+          - matches the innovation y_t - y_{t-1}
+        """
+        pred_obs = self.particle_observation_predictions(particles)
+
+        obs_expanded = obs[:, None, :].expand_as(pred_obs)
+        prev_obs_expanded = prev_obs[:, None, :].expand_as(pred_obs)
+
+        residual = obs_expanded - pred_obs
+        delta_true = obs_expanded - prev_obs_expanded
+        delta_pred = pred_obs - prev_obs_expanded
+        delta_resid = delta_true - delta_pred
+
+        logits = (
+            -residual.square().sum(dim=-1) / (tau_obs**2)
+            - delta_weight * delta_resid.square().sum(dim=-1) / (tau_delta**2)
+        )
+
+        return torch.softmax(logits, dim=1)
+
+    def likelihood_teacher_loss_from_cloud(
+        self,
+        obs,
+        prev_obs,
+        particles,
+        tau_obs=0.20,
+        tau_delta=0.12,
+        delta_weight=1.0,
+    ):
+        """
+        Match likelihood-induced particle weights to an observation-derived teacher distribution.
+        """
+        scores = self.particle_log_scores(obs, particles, prev_obs=prev_obs)  # (B, N)
+        log_p = torch.log_softmax(scores, dim=1)
+
+        teacher = self.teacher_particle_distribution(
+            obs=obs,
+            prev_obs=prev_obs,
+            particles=particles,
+            tau_obs=tau_obs,
+            tau_delta=tau_delta,
+            delta_weight=delta_weight,
+        )  # (B, N)
+
+        loss = -(teacher * log_p).sum(dim=1).mean()
+        return loss
+
+    def lag_penalty_loss(self, particles, prev_obs, obs, margin=0.15):
+        """
+        Explicitly penalize the "just prefer the previous observation" solution.
+
+        We want the true current observation to score higher than y_{t-1}.
+        """
+        score_true = torch.logsumexp(
+            self.particle_log_scores(obs, particles, prev_obs=prev_obs), dim=1
+        ) - math.log(self.n_particles)
+
+        score_prev = torch.logsumexp(
+            self.particle_log_scores(prev_obs, particles, prev_obs=prev_obs), dim=1
+        ) - math.log(self.n_particles)
+
+        return F.relu(margin + score_prev - score_true).mean()
+
     # ------------------------------------------------------------
     # Observation decoder / estimates
     # ------------------------------------------------------------
@@ -256,17 +332,17 @@ class DeepParticleFilter(nn.Module):
     # ------------------------------------------------------------
     # Likelihood / weight update
     # ------------------------------------------------------------
-    def particle_log_scores(self, obs, particles):
+    def particle_log_scores(self, obs, particles, prev_obs):
         obs_feat = self.encode_obs(obs)
         pred_obs = self.particle_observation_predictions(particles)
-        return self.likelihood_head(obs, obs_feat, particles, pred_obs)
+        return self.likelihood_head(obs, prev_obs, obs_feat, particles, pred_obs)
 
-    def cloud_score_matrix(self, particles, obs_candidates):
+    def cloud_score_matrix(self, particles, prev_obs, obs_candidates):
         b = particles.shape[0]
         scores = []
         for k in range(b):
             obs_k = obs_candidates[k : k + 1].expand(b, -1)
-            part_scores = self.particle_log_scores(obs_k, particles)  # (B, N)
+            part_scores = self.particle_log_scores(obs_k, particles, prev_obs=prev_obs)  # (B, N)
             cloud_scores = torch.logsumexp(part_scores, dim=1) - math.log(self.n_particles)
             scores.append(cloud_scores)
         return torch.stack(scores, dim=1)  # (B, B)
@@ -309,7 +385,7 @@ class DeepParticleFilter(nn.Module):
         self._log_weights[need] = -math.log(self.n_particles)
 
     def update(self, obs, resample=True):
-        log_like = self.particle_log_scores(obs, self._particles)
+        log_like = self.particle_log_scores(obs, self._particles, prev_obs=self._last_obs)
         new_log_weights = self._log_weights + log_like
         log_norm = torch.logsumexp(new_log_weights, dim=1, keepdim=True)
         new_log_weights = new_log_weights - log_norm
@@ -514,31 +590,70 @@ class DeepParticleFilter(nn.Module):
         batch_size, seq_len, _ = obs_seq.shape
         t_idx = self._sample_time_indices(seq_len, n_time_samples, obs_seq.device)
 
+        teacher_losses = []
         nce_losses = []
+        lag_losses = []
         spread_losses = []
 
         for t in t_idx:
+            prev_obs = obs_seq[:, t - 1]
+            curr_obs = obs_seq[:, t]
+
             pred_particles, _ = self.bootstrap_predict_from_observation(
-                prev_obs=obs_seq[:, t - 1],
+                prev_obs=prev_obs,
                 n_steps=self.n_pred,
             )
 
-            score_matrix = self.cloud_score_matrix(pred_particles, obs_seq[:, t])
             targets = torch.arange(batch_size, device=obs_seq.device)
-            nce_losses.append(
-                F.cross_entropy(score_matrix / self.contrastive_temperature, targets)
+
+            # Dense per-particle teacher signal
+            teacher_losses.append(
+                self.likelihood_teacher_loss_from_cloud(
+                    obs=curr_obs,
+                    prev_obs=prev_obs,
+                    particles=pred_particles,
+                    tau_obs=0.20,
+                    tau_delta=0.12,
+                    delta_weight=1.0,
+                )
             )
 
-            pos_scores = self.particle_log_scores(obs_seq[:, t], pred_particles)
+            # Cloud-level contrastive loss
+            score_matrix = self.cloud_score_matrix(
+                pred_particles, prev_obs=prev_obs, obs_candidates=curr_obs
+            )
+            nce_losses.append(
+                F.cross_entropy(
+                    score_matrix / self.contrastive_temperature, targets
+                )
+            )
+
+            # Explicit anti-lag penalty
+            lag_losses.append(
+                self.lag_penalty_loss(
+                    particles=pred_particles,
+                    prev_obs=prev_obs,
+                    obs=curr_obs,
+                    margin=0.15,
+                )
+            )
+
+            # Keep particle scores from collapsing to equal values
+            pos_scores = self.particle_log_scores(curr_obs, pred_particles, prev_obs=prev_obs)
             spread_losses.append(self.score_spread_loss(pos_scores))
 
+        teacher = torch.stack(teacher_losses).mean()
         nce = torch.stack(nce_losses).mean()
+        lag = torch.stack(lag_losses).mean()
         spread = torch.stack(spread_losses).mean()
-        total = nce + 0.10 * spread
+
+        total = teacher + 0.25 * nce + 0.20 * lag + 0.05 * spread
 
         return {
             "loss": total,
+            "teacher": teacher,
             "nce": nce,
+            "lag": lag,
             "spread": spread,
         }
 
@@ -558,25 +673,54 @@ class DeepParticleFilter(nn.Module):
             innovation = F.relu(post_err - prior_err + 1e-3).mean()
 
             t_idx = self._sample_time_indices(obs_seq.shape[1], n_nce_steps, obs_seq.device)
+            teacher_losses = []
             nce_losses = []
+            lag_losses = []
             spread_losses = []
             for t in t_idx:
-                score_matrix = self.cloud_score_matrix(
-                    out.prior_particle_history[:, t],
-                    obs_seq[:, t],
-                )
                 targets = torch.arange(obs_seq.shape[0], device=obs_seq.device)
+
+                prev_obs = obs_seq[:, t - 1]
+                curr_obs = obs_seq[:, t]
+                prior_particles = out.prior_particle_history[:, t]
+
+                teacher_losses.append(
+                    self.likelihood_teacher_loss_from_cloud(
+                        obs=curr_obs,
+                        prev_obs=prev_obs,
+                        particles=prior_particles,
+                        tau_obs=0.20,
+                        tau_delta=0.12,
+                        delta_weight=1.0,
+                    )
+                )
+
+                score_matrix = self.cloud_score_matrix(
+                    prior_particles,
+                    prev_obs=prev_obs,
+                    obs_candidates=curr_obs,
+                )
                 nce_losses.append(
                     F.cross_entropy(score_matrix / self.contrastive_temperature, targets)
                 )
 
+                lag_losses.append(
+                    self.lag_penalty_loss(
+                        particles=prior_particles,
+                        prev_obs=prev_obs,
+                        obs=curr_obs,
+                        margin=0.15,
+                    )
+                )
+
                 pos_scores = self.particle_log_scores(
-                    obs_seq[:, t],
-                    out.prior_particle_history[:, t],
+                    curr_obs, prior_particles, prev_obs=prev_obs
                 )
                 spread_losses.append(self.score_spread_loss(pos_scores))
 
+            teacher = torch.stack(teacher_losses).mean()
             nce = torch.stack(nce_losses).mean()
+            lag = torch.stack(lag_losses).mean()
             spread = torch.stack(spread_losses).mean()
 
             ess_reg = ((out.ess[:, 1:] / self.n_particles) - 0.40).square().mean()
@@ -587,7 +731,9 @@ class DeepParticleFilter(nn.Module):
         else:
             prior_pred = torch.zeros((), device=obs_seq.device, dtype=obs_seq.dtype)
             innovation = torch.zeros((), device=obs_seq.device, dtype=obs_seq.dtype)
+            teacher = torch.zeros((), device=obs_seq.device, dtype=obs_seq.dtype)
             nce = torch.zeros((), device=obs_seq.device, dtype=obs_seq.dtype)
+            lag = torch.zeros((), device=obs_seq.device, dtype=obs_seq.dtype)
             spread = torch.zeros((), device=obs_seq.device, dtype=obs_seq.dtype)
             ess_reg = torch.zeros((), device=obs_seq.device, dtype=obs_seq.dtype)
             diversity = torch.zeros((), device=obs_seq.device, dtype=obs_seq.dtype)
@@ -595,8 +741,10 @@ class DeepParticleFilter(nn.Module):
         total = (
             1.00 * post_recon
             + 0.50 * prior_pred
-            + 0.25 * nce
+            + 0.25 * teacher
+            + 0.15 * nce
             + 0.10 * innovation
+            + 0.15 * lag
             + 0.05 * spread
             + 0.05 * diversity
             + 0.02 * ess_reg
@@ -606,7 +754,9 @@ class DeepParticleFilter(nn.Module):
             "loss": total,
             "post_recon": post_recon,
             "prior_pred": prior_pred,
+            "teacher": teacher,
             "nce": nce,
+            "lag": lag,
             "spread": spread,
             "innovation": innovation,
             "ess_reg": ess_reg,

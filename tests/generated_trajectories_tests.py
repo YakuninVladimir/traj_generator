@@ -20,7 +20,6 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--trajectories-dir", default="outputs")
     parser.add_argument("--tokenizer-model", default="sshleifer/tiny-gpt2")
-    parser.add_argument("--embedder-model", default="sshleifer/tiny-gpt2")
     parser.add_argument("--seq-len-obs", type=int, default=16)
     parser.add_argument("--batch-size", type=int, default=2)
     parser.add_argument("--device", default=None)
@@ -41,7 +40,8 @@ def main() -> None:
         seq_len_obs=args.seq_len_obs,
         batch_size=args.batch_size,
         tokenizer_model_name=args.tokenizer_model,
-        embedder_model_name=args.embedder_model,
+        # Project convention: tokenizer and embedder models are identical.
+        embedder_model_name=args.tokenizer_model,
         device=args.device,
     )
 
