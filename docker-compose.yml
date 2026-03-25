@@ -11,4 +11,4 @@ services:
       - ./hf-cache:/root/.cache/huggingface
     environment:
       - HF_HOME=/root/.cache/huggingface
-    command: ["uv", "run", "traj-generate", "--config", "/app/config.json"]
+    command: ["uv", "run", "python", "/app/scripts/generator_cli.py", "--output-dir", "/app/output", "--num-prompts", "8", "--trajectories-per-prompt", "4", "--num-shards", "2"]

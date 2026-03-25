@@ -1,82 +1,62 @@
 # traj-generator
 
-Config-driven Python `uv` project that generates:
-1. `N` prompts using a first LLM.
-2. `M` trajectories per prompt using a second LLM.
+Generate LLM-based trajectories in two stages:
+1. prompt generator produces `N` prompts
+2. trajectory generator produces `M` trajectories per prompt
 
-Inference uses **vLLM** with batching for high throughput.
-
-## What you can configure
-
-Everything is configured in `config.json`:
-- `run.num_prompts` (`N`)
-- `run.trajectories_per_prompt` (`M`)
-- `prompt_generator.user_initial_prompt` (your initial instruction for the first model)
-- model names, sampling settings, vLLM engine settings, and batch sizes
-- output directory (`run.output_dir`)
-- vLLM memory controls: `max_model_len`, `max_num_seqs`, `gpu_memory_utilization`
-- optional eager mode: `enforce_eager` (set `true` to avoid CUDA graph capture)
+This repo also contains the `DeepParticleFilter` implementation extracted from `filter.ipynb`, plus:
+- a dataset/dataloader that maps generated trajectories text into `obs_seq` for the filter
+- smoke/physical/generated tests for the full pipeline
 
 ## Output format
 
-For each run, files are written to:
-- `output/run_<timestamp>/generated_prompts.jsonl`
-- `output/run_<timestamp>/generated_trajectories.jsonl`
-- `output/run_<timestamp>/manifest.json`
+Generation writes to `--output-dir` (default: `outputs`):
+- `prompts.jsonl`: each line has `{ "prompt_id": int, "prompt": str }`
+- `trajectories_<shard>.jsonl`: each line has:
+  - `{ "prompt_id": int, "trajectory_id": int, "prompt": str, "trajectory": str }`
 
-Each run directory is also archived to:
-- `output/archives/run_<timestamp>.zip`
+Missing/uneven shards are supported: the dataset scans existing `trajectories_*.jsonl` files.
 
-## Local run (without Docker)
+## Generated trajectories -> `obs_seq` mapping
 
-Requirements:
-- Python 3.10+
-- NVIDIA GPU + CUDA drivers (recommended for vLLM)
+`traj_generator.data.generated_trajectories.make_generated_trajectories_dataloader`:
+1. tokenizes `trajectory` with `--tokenizer-model`
+2. truncates/pads to `--seq-len-obs`
+3. runs `--embedder-model` and uses the last hidden layer as `obs_seq` with shape `(B, seq_len_obs, dim_y)`
+4. padding tokens are masked out (zeroed)
 
-Commands:
+`DeepParticleFilter` assumes `dim_x >= dim_y` (it uses `particles[..., :dim_y]`). The generated-trajectories test sets `dim_x = dim_y`.
 
+## 4 Commands
+
+1. Smoke tests (filter forward/backward on synthetic physics):
 ```bash
-uv sync
-uv run traj-generate --config config.json
+uv run python tests/smoke_pipeline.py
 ```
 
-## Docker run
-
-Requirements:
-- Docker + Docker Compose
-- NVIDIA Container Toolkit (for GPU access in containers)
-
-Run:
-
+2. Tests on physical data (parameters taken from `filter.ipynb`):
 ```bash
-docker compose up --build
+uv run python tests/physical_data_tests.py
 ```
 
-Because `./output` is bind-mounted into `/app/output`, generated files and ZIP archives remain on your host machine after container shutdown.
-
-Stop and remove container:
-
+3. Generate trajectories (adjust counts + models for speed):
 ```bash
-docker compose down
+uv run python scripts/generator_cli.py \
+  --output-dir outputs \
+  --num-prompts 8 \
+  --trajectories-per-prompt 4 \
+  --num-shards 2
 ```
 
-## Config notes for speed
+You can override models/sampling with CLI flags:
+`--prompt-model`, `--trajectory-model`, `--prompt-temperature`, `--trajectory-temperature`, etc.
 
-To maximize throughput:
-- Increase `prompt_generator.batch_size` and `trajectory_generator.batch_size` as far as GPU memory allows.
-- Tune vLLM settings:
-  - `max_num_batched_tokens`
-  - `max_num_seqs`
-  - `max_model_len`
-  - `gpu_memory_utilization`
-  - `enforce_eager` (`false` is usually faster; `true` is safer for tight VRAM)
-  - `tensor_parallel_size` (for multi-GPU)
-- Use a model size that fits your hardware.
-
-## Memory behavior
-
-The pipeline loads models sequentially:
-1. prompt generator model runs and is released,
-2. trajectory model starts only after GPU memory cleanup.
-
-This avoids keeping two vLLM engines in VRAM at the same time on single-GPU servers.
+4. Tests on generated trajectories:
+```bash
+uv run python tests/generated_trajectories_tests.py \
+  --trajectories-dir outputs \
+  --tokenizer-model sshleifer/tiny-gpt2 \
+  --embedder-model sshleifer/tiny-gpt2 \
+  --seq-len-obs 16 \
+  --batch-size 2
+```

@@ -30,8 +30,9 @@ RUN uv sync --no-install-project
 
 # Application code and runtime config go in later layers.
 COPY src /app/src
+COPY scripts /app/scripts
 COPY config.json /app/config.json
 
 ENV PYTHONPATH=/app/src
 
-CMD ["uv", "run", "--no-sync", "python", "-m", "traj_generator.main", "--config", "/app/config.json"]
+CMD ["uv", "run", "--no-sync", "python", "/app/scripts/generator_cli.py", "--output-dir", "/app/output", "--num-prompts", "8", "--trajectories-per-prompt", "4", "--num-shards", "2"]
