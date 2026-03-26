@@ -49,6 +49,7 @@ Training schedule:
 - `--epochs-scale`: multiply stage epochs by this scale (default: `1.0`).
 - stage schedule (epochs/lr per stage) is configured in `src/filter/train_filter_rebuilt_config.py` via `build_stage_specs()`.
 - `--lr`: override learning rate for all stages (default: `None`, use notebook values per stage).
+- `--checkpoints-dir`: directory for saving the single best checkpoint file `best_filter.pt` (default: `checkpoints`).
 - `--seed`: random seed (default: `7`).
 - `--no-cuda`: force CPU even if CUDA is available.
 
@@ -59,6 +60,7 @@ uv run python scripts/train_filter_rebuilt.py \
   --dataset generated \
   --trajectories-dir outputs \
   --tokenizer-model tiiuae/Falcon-H1-Tiny-90M-Instruct \
+  --checkpoints-dir checkpoints \
   --seq-len-obs 32 \
   --n-pred 1 \
   --dt 0.05 \

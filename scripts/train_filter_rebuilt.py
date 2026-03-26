@@ -157,6 +157,29 @@ def _select_components_for_stage(stage_name: str) -> list[str]:
     return []
 
 
+def _save_checkpoint(
+    checkpoint_path: Path,
+    dpf: DeepParticleFilter,
+    optimizer: torch.optim.Optimizer,
+    stage_name: str,
+    stage_epoch: int,
+    global_step: int,
+    loss_value: float,
+) -> None:
+    checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(
+        {
+            "model_state_dict": dpf.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict(),
+            "stage_name": stage_name,
+            "stage_epoch": stage_epoch,
+            "global_step": global_step,
+            "loss": loss_value,
+        },
+        checkpoint_path,
+    )
+
+
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--logdir", type=str, default="output/tblogs")
@@ -206,6 +229,12 @@ def main() -> None:
 
     p.add_argument("--epochs-scale", type=float, default=1.0)
     p.add_argument("--lr", type=float, default=None)
+    p.add_argument(
+        "--checkpoints-dir",
+        type=str,
+        default="checkpoints",
+        help="Directory for saving the single best filter checkpoint.",
+    )
     p.add_argument("--seed", type=int, default=7)
     p.add_argument("--no-cuda", action="store_true")
     args = p.parse_args()
@@ -232,6 +261,8 @@ def main() -> None:
         writer = None
 
     global_step = 0
+    best_loss = float("inf")
+    checkpoints_dir = Path(args.checkpoints_dir)
     # Stage-local plotting histories are created inside the stage loop.
 
     # -----------------------------
@@ -416,6 +447,21 @@ def main() -> None:
                     latest_loss_path=latest_loss_path,
                     latest_components_path=latest_components_path,
                     components=components,
+                )
+
+            # Save only one best checkpoint for the whole training run.
+            epoch_loss = stage_metrics_history["loss"][-1]
+            if epoch_loss < best_loss:
+                best_loss = epoch_loss
+                best_ckpt = checkpoints_dir / "best_filter.pt"
+                _save_checkpoint(
+                    best_ckpt,
+                    dpf=dpf,
+                    optimizer=optimizer,
+                    stage_name=stage_name,
+                    stage_epoch=epoch,
+                    global_step=global_step,
+                    loss_value=epoch_loss,
                 )
 
     if writer is not None:
